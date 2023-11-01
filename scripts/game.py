@@ -1,4 +1,7 @@
 from settings import *
+from random import choice
+
+from timer import Timer
 
 class Game:
     def __init__(self):
@@ -15,8 +18,23 @@ class Game:
         self.line_surface.set_colorkey((0, 255, 0))
         self.line_surface.set_alpha(120)
 
-        # test
-        self.block = Block(self.sprites, pygame.Vector2(3, 5), 'red')
+        # tetromino
+        random_shapes = choice(list(TETROMINOS.keys()))
+        self.tetromino = Tetromino(random_shapes, self.sprites)
+
+        # timer
+        self.timers = {
+            'vertical move' : Timer(UPDATE_START_SPEED, True, self.move_down)
+
+        }
+        self.timers['vertical move'].activate()
+
+    def timer_update(self):
+        for timer in self.timers.values():
+            timer.update()
+
+    def move_down(self):
+        self.tetromino.move_down()
 
     def draw_grid(self):
         for col in range(1, COLLUMNS):
@@ -31,6 +49,10 @@ class Game:
 
     def run(self):
 
+        # update
+        self.timer_update()
+        self.sprites.update()
+
         # drawing
         self.surface.fill(LIGHT_SLATE_GRAY)
         self.sprites.draw(self.surface)
@@ -43,7 +65,15 @@ class Tetromino:
     def __init__(self, shape, group):
         
         # initial setup
-        self.block_position
+        self.block_positions = TETROMINOS[shape]['shape']
+        self.color = TETROMINOS[shape]['color']
+
+        # create blocks
+        self.blocks = [Block(group, pos, self.color) for pos in self.block_positions]
+
+    def move_down(self):
+        for block in self.blocks:
+            block.pos.y += 1
 
 class Block(pygame.sprite.Sprite):
     def __init__(self, group, pos, color):
@@ -54,7 +84,8 @@ class Block(pygame.sprite.Sprite):
         self.image.fill(color)
 
         # position
-        self.pos = pos
-        x = self.pos.x * CELL_SIZE
-        y = self.pos.y * CELL_SIZE
-        self.rect = self.image.get_rect(topleft = (x, y))
+        self.pos = pygame.Vector2(pos) + BLOCK_OFFSET
+        self.rect = self.image.get_rect(topleft = self.pos * CELL_SIZE)
+
+    def update(self):
+        self.rect.topleft = self.pos * CELL_SIZE
