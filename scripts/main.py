@@ -1,10 +1,13 @@
 from settings import * 
 from sys import exit
+from os.path import join
 
 # components
 from game import Game
 from score import Score
 from preview import Preview
+
+from random import choice
 
 class Main:
     def __init__(self):
@@ -14,11 +17,30 @@ class Main:
         self.display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         self.clock = pygame.time.Clock()
         pygame.display.set_caption('Tetris')
+
+        # shapes
+        self.next_shapes = [choice(list(TETROMINOS.keys())) for shape in range(3)]
         
         # components
-        self.game = Game()
+        self.game = Game(self.get_next_shape, self.update_score)
         self.score = Score()
         self.preview = Preview()
+
+        # audio
+        self.music = pygame.mixer.Sound(join('PROJECT PYGAME', 'sounds', 'music.wav'))
+        self.music.set_volume(0.2)
+        self.music.play(-1)
+
+    def update_score(self, lines, scores, levels):
+        self.score.lines = lines
+        self.score.scores = scores
+        self.score.levels = levels
+
+    def get_next_shape(self):
+        next_shape = self.next_shapes.pop(0)
+        self.next_shapes.append(choice(list(TETROMINOS.keys())))
+        return next_shape
+        
 
     def run(self):
         while True:
@@ -33,7 +55,7 @@ class Main:
             # components running
             self.game.run()
             self.score.run()
-            self.preview.run()
+            self.preview.run(self.next_shapes)
 
             # constant update
             pygame.display.update()
