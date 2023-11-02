@@ -36,6 +36,8 @@ class Game:
         self.timers['vertical move'].activate()
 
     def create_new_tetromino(self):
+
+        self.check_finished_rows()
         self.tetromino = Tetromino(
         choice(list(TETROMINOS.keys())), 
         self.sprites, 
@@ -70,7 +72,22 @@ class Game:
             if keys[pygame.K_RIGHT] :
                 self.tetromino.move_horizontal(1)
                 self.timers['horizontal move'].activate()
-            
+
+    def check_finished_rows(self):
+
+		# get the full row indexes 
+        delete_rows = []
+        for i, row in enumerate(self.field_data):
+            if all(row):
+                delete_rows.append(i)
+
+        if delete_rows:
+            for delete_row in delete_rows:
+
+				# delete full rows
+                for block in self.field_data[delete_row]:
+                    block.kill()
+
 
     def run(self):
 
@@ -104,8 +121,8 @@ class Tetromino:
         collison_list = [block.horizontal_collide(int(block.pos.x + amount), self.field_data) for block in self.blocks]
         return True if any(collison_list) else False
 
-    def next_vertical_move_collision(self, block):
-        collision_list = [block.vertical_collide(int(block.pos.y + 1), self.field_data) for block in self.blocks]
+    def next_vertical_move_collision(self, block, amount):
+        collision_list = [block.vertical_collide(int(block.pos.y + amount), self.field_data) for block in self.blocks]
         return True if any(collision_list) else False
 
     # movement
@@ -115,13 +132,13 @@ class Tetromino:
                 block.pos.x += amount
 
     def move_down(self):
-        if not self.next_vertical_move_collision(self.blocks):
+        if not self.next_vertical_move_collision(self.blocks, 1):
             for block in self.blocks:
                 block.pos.y += 1
 
         else:
             for block in self.blocks:
-                self.field_data[int(block.pos.y)][int(block.pos.x)] = 1
+                self.field_data[int(block.pos.y)][int(block.pos.x)] = block
             self.create_new_tetromino()
 
 class Block(pygame.sprite.Sprite):
@@ -141,14 +158,14 @@ class Block(pygame.sprite.Sprite):
             return True
 
         if field_data[int(self.pos.y)][x]:
-            return True
+	        return True
 
     def vertical_collide(self, y, field_data):
-        if not y < ROWS:
-            return True
+	    if y >= ROWS:
+		    return True
 
-        if y >= 0 and field_data[y][int(self.pos.x)]:
-            return True
+	    if y >= 0 and field_data[y][int(self.pos.x)]:
+		    return True
 
     def update(self):
         self.rect.topleft = self.pos * CELL_SIZE
