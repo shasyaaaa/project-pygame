@@ -202,8 +202,8 @@ class Tetromino:
         else:
             for block in self.blocks:
                 self.field_data[int(block.pos.y)][int(block.pos.x)] = block
-            self.landing_music = pygame.mixer.Sound(join('PROJECT PYGAME','sounds','landing.wav'))
-            self.landing_music.set_volume(0.2)
+            self.landing_music = pygame.mixer.Sound(join('sounds', 'landing.wav'))
+            self.landing_music.set_volume(0.05)
             self.landing_music.play()
             self.create_new_tetromino()
 
